@@ -1,0 +1,7 @@
+{
+    "username": "12345678",
+    "password": "Admin123;)",
+    "totp_secret": "",
+    "totp_devicename": "",
+    "waiting_time": 10
+}
