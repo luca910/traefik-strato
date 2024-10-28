@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    ports:
+      - "81:80"       # HTTP port for external access
+      - "443:443"     # HTTPS port for external access
+      - "8081:8080"   # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+      - ./traefik-exec.sh:/traefik-strato/traefik-exec.sh
+      - ./strato-certbot:/traefik-strato/strato-certbot
+    environment:
+      EXEC_PATH: /traefik-strato/traefik-exec.sh
+    command:
+      - "--log.level=DEBUG"
+      - "--api.dashboard=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--api.insecure=true"
+      
+      # Entrypoints configuration
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.http.http.redirections.entrypoint.to=https"
+      - "--entrypoints.http.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.https.address=:443"
+      
+      # ACME DNS challenge configuration
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=exec"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+#      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+    labels:
+      # Dashboard
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`proxy.example.com`)"
+      - "traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.traefik.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.traefik-secure.entrypoints=https"
+      - "traefik.http.routers.traefik-secure.rule=Host(`proxy.example.com`)"
+      - "traefik.http.routers.traefik-secure.tls=true"
+      - "traefik.http.routers.traefik-secure.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].main=example.com"
+      - "traefik.http.routers.traefik-secure.tls.domains[0].sans=*.example.com"
+      - "traefik.http.routers.traefik-secure.service=api@internal"
+
+  whoami:
+    image: containous/whoami:v1.5.0
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.example.com`)"
+      - "traefik.http.routers.whoami.entrypoints=https"
+      - "traefik.http.routers.whoami.tls=true"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
