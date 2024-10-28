@@ -16,7 +16,7 @@ log "Running strato-exec"
 apk update && apk add --no-cache python3 py3-pip >> /proc/1/fd/1
 
 # Create and activate the virtual environment
-VENV_DIR="/strato/venv"
+VENV_DIR="/traefik-strato/venv"
 python3 -m venv "$VENV_DIR"
 # shellcheck disable=SC1091
 . "$VENV_DIR/bin/activate"
