@@ -1,4 +1,4 @@
-strato-auth.json
+strato-certbot/strato-auth.json
 venv
 certbot.env
 __pycache__
