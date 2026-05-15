@@ -8,3 +8,5 @@ PRs welcome
 More docs soon
 
 ...maybe
+
+nvm i hate strato, switched to ionos.
